@@ -1,14 +1,13 @@
 import os
 import json
-from datetime import datetime
-import anthropic
+import openai
 
-# Fetch Anthropic API key from system environment
-anthropic_key = os.getenv("ANTHROPIC_API_KEY")
-if not anthropic_key:
-    raise ValueError("ANTHROPIC_API_KEY not found in environment variables")
+# Get OpenAI key from system environment (set in .zprofile)
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise ValueError("OPENAI_API_KEY not found in environment variables")
 
-anthropic_client = anthropic.Anthropic(api_key=anthropic_key)
+openai.api_key = api_key
 
 class GoalSettingChatbot:
     def __init__(self):
@@ -39,22 +38,30 @@ class GoalSettingChatbot:
 
     def get_chatbot_response(self, prompt, context=""):
         try:
-            full_prompt = f"{context}\n\nUser input: {prompt}"
-            response = anthropic_client.completions.create(
-                model="claude-2",
-                max_tokens=1000,
+            messages = [
+                {
+                    "role": "system",
+                    "content": (
+                        "You are a goal-setting coach focused on helping users set and achieve ambitious goals. "
+                        "Your approach includes:\n"
+                        "1. Helping users set clear, measurable goals\n"
+                        "2. Encouraging users to think bigger and be more ambitious\n"
+                        "3. Providing constructive feedback on goal alignment\n"
+                        "4. Maintaining a supportive and motivating tone"
+                    )
+                },
+                {
+                    "role": "user",
+                    "content": f"{context}\n\n{prompt}"
+                }
+            ]
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=messages,
                 temperature=0.7,
-                prompt=(
-                    "\n\nHuman: You are a goal-setting coach focused on helping users set and achieve ambitious goals.\n"
-                    "Your approach includes:\n"
-                    "1. Helping users set clear, measurable goals\n"
-                    "2. Encouraging users to think bigger and be more ambitious\n"
-                    "3. Providing constructive feedback on goal alignment\n"
-                    "4. Maintaining a supportive and motivating tone\n\n"
-                    f"{full_prompt}\n\nAssistant:"
-                ),
+                max_tokens=1000
             )
-            return response.completion
+            return response.choices[0].message.content.strip()
         except Exception as e:
             return f"Error: {str(e)}"
 

@@ -12,6 +12,7 @@
         .msg { margin: 8px 0; }
         .msg.user { text-align: right; color: #333; }
         .msg.bot { text-align: left; color: #1a73e8; }
+        img { max-width: 100%; margin-top: 10px; border-radius: 8px; }
         form { display: flex; }
         input[type=text] { flex: 1; padding: 10px; border-radius: 4px; border: 1px solid #ccc; }
         button { margin-left: 8px; padding: 10px 20px; background: #1a73e8; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
@@ -28,6 +29,7 @@
             <button type="submit">Send</button>
         </form>
     </div>
+
     <script>
         const chatBox = document.getElementById('chat-box');
         const chatForm = document.getElementById('chat-form');
@@ -48,14 +50,24 @@
             appendMessage('user', message);
             userInput.value = '';
             appendMessage('bot', '...');
+
             const res = await fetch('/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ message })
             });
+
             const data = await res.json();
-            chatBox.removeChild(chatBox.lastChild);
+            chatBox.removeChild(chatBox.lastChild); // Remove '...'
+
             appendMessage('bot', data.response);
+            if (data.image_url) {
+                const img = document.createElement('img');
+                img.src = data.image_url;
+                chatBox.appendChild(img);
+            }
+
+            chatBox.scrollTop = chatBox.scrollHeight;
         };
     </script>
 </body>
